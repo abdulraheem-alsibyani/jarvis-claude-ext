@@ -5,9 +5,15 @@
   "description": "Injects temporal and phase context into claude.ai conversation.",
   "permissions": ["storage"],
   "host_permissions": ["https://claude.ai/*"],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["injection.js"],
+      "matches": ["https://claude.ai/*"]
+    }
+  ],
   "content_scripts": [
     {
-      "world": "MAIN",
       "matches": ["https://claude.ai/*"],
       "js": ["content.js"],
       "run_at": "document_start"
