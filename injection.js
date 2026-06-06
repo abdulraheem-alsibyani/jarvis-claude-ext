@@ -22,7 +22,7 @@ function askIsolatedWorld(conversationId) {
     function handleReply(event) {
       if (event.data.type === "JARVIS_ANCHOR_REPLY" && event.data.id === id) {
         window.removeEventListener("message", handleReply);
-        resolve(event.data.lastDate);
+        resolve({ lastDate: event.data.lastDate, mode: event.data.mode });
       }
     }
 
@@ -56,11 +56,8 @@ window.fetch = async function (...args) {
       const conversationId = url.match(
         /chat_conversations\/([^/]+)\/completion/,
       )[1];
-      const lastDate = await askIsolatedWorld(conversationId);
+      const { lastDate, mode } = await askIsolatedWorld(conversationId);
       const today = todayString();
-
-      console.log(conversationId);
-      console.log("[Jarvis] last date: ", todayString());
 
       let prefix = timeTrack();
 
@@ -74,6 +71,10 @@ window.fetch = async function (...args) {
           },
           "*",
         );
+      }
+
+      if (mode) {
+        prefix = prefix + "[mode: " + mode + "]";
       }
       const parsed = JSON.parse(init.body);
       parsed.prompt = prefix + "\n" + parsed.prompt;

@@ -11,11 +11,15 @@ window.addEventListener("message", async (event) => {
   if (event.data.type === "JARVIS_ANCHOR_QUERY") {
     //console.log("[Jarvis isolated] guard passed, about to read storage");
     try {
-      const result = await chrome.storage.local.get(event.data.conversationId);
+      const result = await chrome.storage.local.get([
+        event.data.conversationId,
+        "responseMode",
+      ]);
       const lastDate = result[event.data.conversationId];
+      const mode = result["responseMode"];
       console.log("[Jarvis isolated] read ok:", lastDate);
       window.postMessage(
-        { type: "JARVIS_ANCHOR_REPLY", id: event.data.id, lastDate },
+        { type: "JARVIS_ANCHOR_REPLY", id: event.data.id, lastDate, mode },
         "*",
       );
     } catch (e) {
