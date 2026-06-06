@@ -8,7 +8,7 @@ function timeTrack() {
   const hours = String(now.getHours()).padStart(2, "0");
   const minutes = String(now.getMinutes()).padStart(2, "0");
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const injectedTime = `[${hours}:${minutes} ${timezone.split("/").pop()}]`;
+  const injectedTime = `${hours}:${minutes} ${timezone.split("/").pop()}`;
   return injectedTime;
 }
 
@@ -34,11 +34,17 @@ function askIsolatedWorld(conversationId) {
   });
 }
 
+function todayString() {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, "0");
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const year = String(today.getFullYear());
+  return `${day}-${month}-${year}`;
+}
 window.fetch = async function (...args) {
   try {
     const [resource, init] = args;
     const url = typeof resource === "string" ? resource : resource?.url;
-    console.log("[Jarvis] saw request:", url, init?.method, typeof init?.body);
 
     if (
       url &&
@@ -50,9 +56,27 @@ window.fetch = async function (...args) {
       const conversationId = url.match(
         /chat_conversations\/([^/]+)\/completion/,
       )[1];
+      const lastDate = await askIsolatedWorld(conversationId);
+      const today = todayString();
+
       console.log(conversationId);
+      console.log("[Jarvis] last date: ", todayString());
+
+      let prefix = timeTrack();
+
+      if (lastDate !== today) {
+        prefix = `[${today} ${timeTrack()}]`;
+        window.postMessage(
+          {
+            type: "JARVIS_ANCHOR_SET",
+            conversationId: conversationId,
+            date: today,
+          },
+          "*",
+        );
+      }
       const parsed = JSON.parse(init.body);
-      parsed.prompt = timeTrack() + "\n" + parsed.prompt;
+      parsed.prompt = prefix + "\n" + parsed.prompt;
       init.body = JSON.stringify(parsed);
     }
   } catch (err) {
