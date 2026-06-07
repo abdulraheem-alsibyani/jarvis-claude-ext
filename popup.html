@@ -3,13 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      body {font-family: system-ui, sans-serif; width 220px; padding:12px; margin:0;}
-      h1 {font-size: 14px; margin: 0 0 8px 0;}
-      p {font-size: 12px; color: #666; margin: 0;}
+      body {font-family: system-ui, sans-serif; width 220px; padding:12px;}
+      button { display: block; width: 100%; margin: 4px 0; padding: 8px; cursor: pointer;}
+      button.active { background: #C96442; color: white;
+      }
     </style>
   </head>
   <body>
-    <h1>Jarvis</h1>
-    <p>Stage 1 - Scaffold initiated.</p>
+    <h3 style="margin: 0 0 8px">Response mode</h3>
+    <button data-mode="1 line">1 line</button>
+    <button data-mode="1 paragraph">1 paragraph</button>
+    <button data-mode="go deep">go deep</button>
+    <button data-mode="search">search the web for real references"</button>
+    <button data-mode="">off</button>
+    <script src="popup.js"></script>
   </body>
 </html>
