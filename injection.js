@@ -74,7 +74,7 @@ window.fetch = async function (...args) {
       }
 
       if (modes && modes.length) {
-        prefix = prefix + " | mode: " + modes.join(", ");
+        prefix = prefix + " | mode: " + modes.join(" + ");
       }
       const parsed = JSON.parse(init.body);
       parsed.prompt = "[" + prefix + "]\n" + parsed.prompt;

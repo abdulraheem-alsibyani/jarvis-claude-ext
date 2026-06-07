@@ -20,7 +20,11 @@ chrome.storage.local.get("responseModes", (result) => {
 
   function renderActive(activeArray) {
     buttons.forEach((btn) => {
-      btn.classList.toggle("active", activeArray.includes(btn.dataset.mode));
+      if (btn.dataset.mode === "") {
+        btn.classList.toggle("active", activeArray.length === 0);
+      } else {
+        btn.classList.toggle("active", activeArray.includes(btn.dataset.mode));
+      }
     });
   }
 
@@ -35,6 +39,12 @@ chrome.storage.local.get("responseModes", (result) => {
   buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const clicked = btn.dataset.mode;
+
+      if (clicked === "") {
+        activeModes = [];
+        persist();
+        return;
+      }
       const group = MODE_GROUPS[clicked];
       let active = [...activeModes];
 
