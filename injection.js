@@ -74,10 +74,10 @@ window.fetch = async function (...args) {
       }
 
       if (mode) {
-        prefix = prefix + "[mode: " + mode + "]";
+        prefix = prefix + " | mode: " + mode;
       }
       const parsed = JSON.parse(init.body);
-      parsed.prompt = prefix + "\n" + parsed.prompt;
+      parsed.prompt = "[" + prefix + "]\n" + parsed.prompt;
       init.body = JSON.stringify(parsed);
     }
   } catch (err) {
