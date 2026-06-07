@@ -13,13 +13,13 @@ window.addEventListener("message", async (event) => {
     try {
       const result = await chrome.storage.local.get([
         event.data.conversationId,
-        "responseMode",
+        "responseModes",
       ]);
       const lastDate = result[event.data.conversationId];
-      const mode = result["responseMode"];
+      const modes = result["responseModes"] || [];
       console.log("[Jarvis isolated] read ok:", lastDate);
       window.postMessage(
-        { type: "JARVIS_ANCHOR_REPLY", id: event.data.id, lastDate, mode },
+        { type: "JARVIS_ANCHOR_REPLY", id: event.data.id, lastDate, modes },
         "*",
       );
     } catch (e) {
