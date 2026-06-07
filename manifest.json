@@ -21,6 +21,16 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Jarvis"
+    "default_title": "Jarvis",
+    "default_icon": {
+      "16": "icons/Jarvis-icon16.png",
+      "48": "icons/Jarvis-icon48.png",
+      "128": "icons/Jarvis-icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/Jarvis-icon16.png",
+    "48": "icons/Jarvis-icon48.png",
+    "128": "icons/Jarvis-icon128.png"
   }
 }
