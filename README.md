@@ -14,9 +14,6 @@ What Jarvis injects:
 
 ## How it works
 
-[This is the section that signals engineering. Explain the architecture
-in your own words:
-
 - window.fetch, identify the completion POST by its URL, parse the request body's JSON, prepend the injection to the prompt field, re-serialize, and forward. It's all wrapped so that any failure falls back to sending the original message untouched.
 - Content scripts run in an _isolated world_ (has `chrome.*`, no access to the page's fetch). Patching `window.fetch` only works in the main world (the page's context).
 - The content script (isolated world) injects the patcher by creating a `<script>` element whose `src` is `chrome.runtime.getURL("injection.js")` and appending it to the page's DOM. Because the _page_ loads it, `injection.js` runs in the main world. This requires declaring `injection.js` under `web_accessible_resources` in the manifest — otherwise the page is not permitted to load the extension file.
