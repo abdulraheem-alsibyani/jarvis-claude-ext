@@ -41,6 +41,104 @@ function todayString() {
   const year = String(today.getFullYear());
   return `${day}-${month}-${year}`;
 }
+
+function readVarint(bytes, offset) {
+  let result = 0n;
+  let shift = 0n;
+  let pos = offset;
+  while (true) {
+    const b = bytes[pos];
+    result |= BigInt(b & 0x7f) << shift;
+    pos++;
+    if ((b & 0x80) === 0) break;
+    shift += 7n;
+
+    return { value: result, next: pos };
+  }
+
+  function writeVarint(value) {
+    let v = BigInt(value);
+    const out = [];
+    while (true) {
+      let byte = Number(v & 0x7fn);
+      v >>= 7n;
+      if (v !== 0n) {
+        out.push(byte | 0x80n);
+      } else {
+        out.push(byte);
+        break;
+      }
+    }
+    return new Uint8Array(out);
+  }
+}
+function walkFields(bytes, start, end) {
+  const fields = [];
+  let pos = start;
+  while (pos < end) {
+    const tagStart = pos;
+    const { value: tagVal, next: afterTag } = readVarint(bytes, pos);
+    const fieldNumber = Number(tagVal >> 3n);
+    const wireType = Number(tagVal & 0x7n);
+    pos = afterTag;
+    let contentStart,
+      contentLen,
+      lenVarintLen = 0,
+      fieldEnd;
+
+    if (wireType === 0) {
+      const { next } = readVarint(bytes, pos);
+      contentStart = pos;
+      contentLen = next - pos;
+      pos = next;
+    } else if (wireType === 1) {
+      contentStart = pos;
+      contentLen = 8;
+      pos += 8;
+    } else if (wireType === 2) {
+      const { value: lenVal, next: afterLen } = readVarint(bytes, pos);
+      lenVarintLen = afterLen - pos;
+      contentStart = afterLen;
+      contentLen = Number(lenVal);
+      pos = afterLen + contentLen;
+    } else if (wireType === 5) {
+      contentStart = pos;
+      contentLen = 4;
+      pos += 4;
+    }
+    fieldEnd = pos;
+    fields.push({
+      fieldNumber,
+      wireType,
+      tagStart,
+      tagLen: afterTag - tagStart,
+      lenVarintLen,
+      contentStart,
+      contentLen,
+      fieldEnd,
+    });
+    pos = fieldEnd;
+  }
+  return fields;
+}
+
+function findField(fields, fieldNumber, wireType) {
+  return fields.find(
+    (f) => f.fieldNumber === fieldNumber && f.wireType === wireType,
+  );
+}
+
+function concatBytees(arrays) {
+  const total = arrays.reduce((sum, a) => sum + a.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const a of arrays) {
+    out.set(a, offset);
+    offset += a.length;
+  }
+  return out;
+}
+
 window.fetch = async function (...args) {
   try {
     const [resource, init] = args;
