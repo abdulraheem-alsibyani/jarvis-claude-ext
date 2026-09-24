@@ -128,7 +128,7 @@ function findField(fields, fieldNumber, wireType) {
   );
 }
 
-function concatBytees(arrays) {
+function concatBytes(arrays) {
   const total = arrays.reduce((sum, a) => sum + a.length, 0);
   const out = new Uint8Array(total);
   let offset = 0;
@@ -137,6 +137,70 @@ function concatBytees(arrays) {
     offset += a.length;
   }
   return out;
+}
+
+function injectAnchorIntoProto(bytes, prefixText) {
+  const topFields = walkFields(bytes, 0, bytes.length);
+  const contentField = findField(topFields, 2, 2);
+  if (!contentField) return null;
+
+  const inner = walkFields(
+    bytes,
+    contentField.contentStart,
+    contentField.contentStart + contentField.contentLen,
+  );
+
+  const textField = findField(inner, 3, 2);
+  if (!textField) return null;
+
+  const oldText = new TextDecoder("utf-8").decode(
+    bytes.subarray(
+      textField.contentStart,
+      textField.contentStart + textField.contentLen,
+    ),
+  );
+  const newTextBytes = new TextEncoder().encode(prefixText + oldText);
+  const newTextLenVarint = writeVarint(newTextBytes.length);
+  const tagBytes = bytes.subarray(
+    textField.tagStart,
+    textField.tagStart + textField.tagLen,
+  );
+
+  const field2ContentBefore = bytes.subarray(
+    contentField.contentStart,
+    textField.tagStart,
+  );
+  const field2ContentAfter = bytes.subarray(
+    textField.contentStart + textField.contentLen,
+    contentField.contentStart + contentField.contentLen,
+  );
+
+  const newField2Content = concatBytes([
+    field2ContentBefore,
+    tagBytes,
+    newTextLenVarint,
+    newTextBytes,
+    field2ContentAfter,
+  ]);
+
+  const newField2LenVarint = writeVarint(newField2Content.length);
+  const field2TagBytes = bytes.subarray(
+    contentField.tagStart,
+    contentField.tagStart + contentField.tagLen,
+  );
+
+  const beforeField2 = bytes.subarray(0, contentField.tagStart);
+  const afterField2 = bytes.subarray(
+    contentField.contentStart + contentField.contentLen,
+  );
+
+  return concatBytes([
+    beforeField2,
+    field2TagBytes,
+    newField2LenVarint,
+    newField2Content,
+    afterField2,
+  ]);
 }
 
 window.fetch = async function (...args) {
