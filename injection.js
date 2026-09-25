@@ -52,26 +52,25 @@ function readVarint(bytes, offset) {
     pos++;
     if ((b & 0x80) === 0) break;
     shift += 7n;
-
-    return { value: result, next: pos };
   }
-
-  function writeVarint(value) {
-    let v = BigInt(value);
-    const out = [];
-    while (true) {
-      let byte = Number(v & 0x7fn);
-      v >>= 7n;
-      if (v !== 0n) {
-        out.push(byte | 0x80n);
-      } else {
-        out.push(byte);
-        break;
-      }
-    }
-    return new Uint8Array(out);
-  }
+  return { value: result, next: pos };
 }
+function writeVarint(value) {
+  let v = BigInt(value);
+  const out = [];
+  while (true) {
+    let byte = Number(v & 0x7fn);
+    v >>= 7n;
+    if (v !== 0n) {
+      out.push(byte | 0x80);
+    } else {
+      out.push(byte);
+      break;
+    }
+  }
+  return new Uint8Array(out);
+}
+
 function walkFields(bytes, start, end) {
   const fields = [];
   let pos = start;
