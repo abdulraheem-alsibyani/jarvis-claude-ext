@@ -205,41 +205,76 @@ function injectAnchorIntoProto(bytes, prefixText) {
 window.fetch = async function (...args) {
   try {
     const [resource, init] = args;
-    const url = typeof resource === "string" ? resource : resource?.url;
+
+    const url =
+      typeof resource === "string"
+        ? resource
+        : resource instanceof URL
+          ? resource.href
+          : resource?.url;
+
+    const method = (init?.method || resource?.method || "GET").toUpperCase();
 
     if (
+      method !== "GET" &&
       url &&
-      init &&
-      init.method === "POST" &&
-      init.body &&
-      COMPLETION_REGEX.test(url)
+      (url.includes("ConversationService/PerformAction") ||
+        COMPLETION_REGEX.test(url))
     ) {
-      const conversationId = url.match(
-        /chat_conversations\/([^/]+)\/completion/,
-      )[1];
-      const { lastDate, modes } = await askIsolatedWorld(conversationId);
-      const today = todayString();
+      const b = init?.body;
+      let bytes = null;
+      if (b instanceof Uint8Array) bytes = b;
+      else if (b instanceof ArrayBuffer) bytes = new Uint8Array(b);
+      else if (b instanceof Blob) bytes = new Uint8Array(await b.arrayBuffer());
 
-      let prefix = timeTrack();
-
-      if (lastDate !== today) {
-        prefix = `${today} ${timeTrack()}`;
-        window.postMessage(
-          {
-            type: "JARVIS_ANCHOR_SET",
-            conversationId: conversationId,
-            date: today,
-          },
-          "*",
+      if (bytes) {
+        const hex = Array.from(bytes)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        console.log(
+          "JARVIS HEX [" +
+            url.split("?")[0] +
+            "] (" +
+            bytes.length +
+            " bytes):",
+          hex,
         );
       }
+    }
+    const isSend =
+      method === "POST" &&
+      url &&
+      (COMPLETION_REGEX.test(url) ||
+        url.includes("ConversationService/PerformAction"));
 
-      if (modes && modes.length) {
-        prefix = prefix + " | mode: " + modes.join(" + ");
+    if (isSend) {
+      const b = init?.body;
+      let bytes = null;
+      if (b instanceof Uint8Array) bytes = b;
+      else if (b instanceof ArrayBuffer) bytes = new Uint8Array(b);
+      else if (b instanceof Blob) bytes = new Uint8Array(await b.arrayBuffer());
+
+      if (bytes) {
+        const conversationId =
+          window.location.href.match(/\/chat\/([^/?#]+)/)?.[1];
+        const { lastDate, modes } = await askIsolatedWorld(conversationId);
+        const today = todayString();
+        let prefix = timeTrack();
+
+        if (lastDate !== today) {
+          prefix = `${today} ${timeTrack()}`;
+          window.postMessage(
+            { type: "JARVIS_ANCHOR_SET", conversationId, date: today },
+            "*",
+          );
+        }
+
+        if (modes && modes.length) {
+          prefix = prefix + " | mode: " + modes.join(" + ");
+        }
+        const rewritten = injectAnchorIntoProto(bytes, "[" + prefix + "]\n");
+        if (rewritten) init.body = rewritten;
       }
-      const parsed = JSON.parse(init.body);
-      parsed.prompt = "[" + prefix + "]\n" + parsed.prompt;
-      init.body = JSON.stringify(parsed);
     }
   } catch (err) {
     console.warn("JARVIS injection failed.\nError: ", err);
