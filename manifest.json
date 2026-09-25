@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Jarvis - Claude Context Injector",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Injects temporal and phase context into claude.ai conversation.",
   "permissions": ["storage"],
   "host_permissions": ["https://claude.ai/*"],
