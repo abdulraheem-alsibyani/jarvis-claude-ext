@@ -35,12 +35,17 @@
         font-family: "Source Serif 4", Georgia, serif;
         padding: 16px 11px 16px 16px;
         border: solid;
+        flex-direction: row;
+        display: flex;
+        gap: 16px;
         border-width: 2px;
         border-color: var(--clay-hover);
       }
 
       header {
-        margin-bottom: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
         color: var(--ink);
       }
 
@@ -72,8 +77,18 @@
       .modes {
         cursor: default;
         display: flex;
+        flex-direction: row;
+        gap: 16px;
+      }
+      .mode {
+        cursor: default;
+        display: flex;
         flex-direction: column;
         gap: 6px;
+      }
+
+      .push-bottom {
+        margin-top: auto;
       }
 
       button {
@@ -143,29 +158,29 @@
     </style>
   </head>
   <body>
-    <header>
-      <h1>Jarvis</h1>
-      <p class="subtitle">Jarvis, inject it.</p>
-    </header>
-
-    <p class="label">Jarvis, shorten it.</p>
     <div class="modes">
-      <button data-mode="1 line">One line</button>
-      <button data-mode="1 paragraph">One paragraph</button>
-      <button data-mode="brief">Brief</button>
-      <p class="label">Jarvis, go long.</p>
-      <button data-mode="go deep">Go deep</button>
-      <button data-mode="search the web">Search the web</button>
-      <p class="label">Jarvis, structure it.</p>
-      <button data-mode="table">Table</button>
-      <button data-mode="numbered bullets">Numbered bullets</button>
-
-      <div class="off-row">
-        <button data-mode="">No mode</button>
+      <header>
+        <h1>Jarvis</h1>
+        <p class="subtitle">Jarvis, inject it.</p>
+        <button class="push-bottom" data-mode="">No mode</button>
+      </header>
+      <div class="mode">
+        <p class="label">Jarvis, shorten it.</p>
+        <button data-mode="1 line">One line</button>
+        <button data-mode="1 paragraph">One paragraph</button>
+        <button data-mode="brief">Brief</button>
+      </div>
+      <div class="mode">
+        <p class="label">Jarvis, go long.</p>
+        <button data-mode="go deep">Go deep</button>
+        <button data-mode="search the web">Search the web</button>
+      </div>
+      <div class="mode">
+        <p class="label">Jarvis, structure it.</p>
+        <button data-mode="table">Table</button>
+        <button data-mode="numbered bullets">Numbered bullets</button>
       </div>
     </div>
-
-    <footer>Active: <span class="current" id="current">none</span></footer>
 
     <script src="popup.js"></script>
   </body>
