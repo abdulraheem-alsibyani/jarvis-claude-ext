@@ -24,6 +24,15 @@ window.addEventListener("message", async (event) => {
       );
     } catch (e) {
       console.error("[Jarvis isolated] storage read threw:", e);
+      window.postMessage(
+        {
+          type: "JARVIS_ANCHOR_REPLY",
+          id: event.data.id,
+          lastDate: undefined,
+          modes: [],
+        },
+        "*",
+      );
     }
   }
 
