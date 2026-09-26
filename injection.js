@@ -202,6 +202,35 @@ function injectAnchorIntoProto(bytes, prefixText) {
   ]);
 }
 
+function describeFields(bytes, start, end, depth) {
+  const fields = walkFields(bytes, start, end);
+  for (const f of fields) {
+    const indent = "  ".repeat(depth);
+    let preview = "(binary)";
+    if (f.wireType === 2) {
+      const slice = bytes.subarray(
+        f.contentStart,
+        f.contentStart + f.contentLen,
+      );
+      const text = new TextDecoder("utf-8").decode(slice);
+      if (/^[\x20-\x7E]*$/.test(text)) preview = text;
+    }
+    console.log(
+      indent,
+      +`field ${f.fieldNumber} (wire $ ${f.wireType}, ${f.contentLen}b):`,
+      preview,
+    );
+    if (f.wireType === 2 && preview === "(binary)" && depth < 3) {
+      describeFields(
+        bytes,
+        f.contentStart,
+        f.contentStart + f.contentLen,
+        depth + 1,
+      );
+    }
+  }
+}
+
 window.fetch = async function (...args) {
   try {
     const [resource, init] = args;
@@ -228,6 +257,7 @@ window.fetch = async function (...args) {
       else if (b instanceof Blob) bytes = new Uint8Array(await b.arrayBuffer());
 
       if (bytes) {
+        describeFields(bytes, 0, bytes.length, 0);
         const hex = Array.from(bytes)
           .map((b) => b.toString(16).padStart(2, "0"))
           .join("");
@@ -257,23 +287,26 @@ window.fetch = async function (...args) {
       if (bytes) {
         const conversationId =
           window.location.href.match(/\/chat\/([^/?#]+)/)?.[1];
-        const { lastDate, modes } = await askIsolatedWorld(conversationId);
-        const today = todayString();
-        let prefix = timeTrack();
 
-        if (lastDate !== today) {
-          prefix = `${today} ${timeTrack()}`;
-          window.postMessage(
-            { type: "JARVIS_ANCHOR_SET", conversationId, date: today },
-            "*",
-          );
-        }
+        if (conversationId) {
+          const { lastDate, modes } = await askIsolatedWorld(conversationId);
+          const today = todayString();
+          let prefix = timeTrack();
 
-        if (modes && modes.length) {
-          prefix = prefix + " | mode: " + modes.join(" + ");
+          if (lastDate !== today) {
+            prefix = `${today} ${timeTrack()}`;
+            window.postMessage(
+              { type: "JARVIS_ANCHOR_SET", conversationId, date: today },
+              "*",
+            );
+          }
+
+          if (modes && modes.length) {
+            prefix = prefix + " | mode: " + modes.join(" + ");
+          }
+          const rewritten = injectAnchorIntoProto(bytes, "[" + prefix + "]\n");
+          if (rewritten) init.body = rewritten;
         }
-        const rewritten = injectAnchorIntoProto(bytes, "[" + prefix + "]\n");
-        if (rewritten) init.body = rewritten;
       }
     }
   } catch (err) {
