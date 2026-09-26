@@ -270,33 +270,6 @@ window.fetch = async function (...args) {
 
     const method = (init?.method || resource?.method || "GET").toUpperCase();
 
-    if (
-      method !== "GET" &&
-      url &&
-      (url.includes("ConversationService/PerformAction") ||
-        COMPLETION_REGEX.test(url))
-    ) {
-      const b = init?.body;
-      let bytes = null;
-      if (b instanceof Uint8Array) bytes = b;
-      else if (b instanceof ArrayBuffer) bytes = new Uint8Array(b);
-      else if (b instanceof Blob) bytes = new Uint8Array(await b.arrayBuffer());
-
-      if (bytes) {
-        describeFields(bytes, 0, bytes.length, 0);
-        const hex = Array.from(bytes)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-        console.log(
-          "JARVIS HEX [" +
-            url.split("?")[0] +
-            "] (" +
-            bytes.length +
-            " bytes):",
-          hex,
-        );
-      }
-    }
     const isSend =
       method === "POST" &&
       url &&
