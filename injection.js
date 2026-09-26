@@ -231,6 +231,32 @@ function describeFields(bytes, start, end, depth) {
   }
 }
 
+function extractConversationId(bytes) {
+  const top = walkFields(bytes, 0, bytes.length);
+  const wrapper = findField(top, 1, 2);
+  if (!wrapper) return null;
+
+  const inner = walkFields(
+    bytes,
+    wrapper.contentStart,
+    wrapper.contentStart + wrapper.contentLen,
+  );
+  const idField = findField(inner, 2, 2);
+  if (!idField) return null;
+
+  const text = new TextDecoder("utf-8").decode(
+    bytes.subarray(
+      idField.contentStart,
+      idField.contentStart + idField.contentLen,
+    ),
+  );
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      text,
+    );
+  return isUuid ? text : null;
+}
+
 window.fetch = async function (...args) {
   try {
     const [resource, init] = args;
@@ -285,8 +311,7 @@ window.fetch = async function (...args) {
       else if (b instanceof Blob) bytes = new Uint8Array(await b.arrayBuffer());
 
       if (bytes) {
-        const conversationId =
-          window.location.href.match(/\/chat\/([^/?#]+)/)?.[1];
+        const conversationId = extractConversationId(bytes);
 
         if (conversationId) {
           const { lastDate, modes } = await askIsolatedWorld(conversationId);
