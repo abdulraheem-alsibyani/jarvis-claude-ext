@@ -18,9 +18,12 @@ const originalFetch = window.fetch;
 function askIsolatedWorld(conversationId) {
   return new Promise((resolve) => {
     const id = crypto.randomUUID();
+    let settled = false;
 
     function handleReply(event) {
       if (event.data.type === "JARVIS_ANCHOR_REPLY" && event.data.id === id) {
+        if (settled) return;
+        settled = true;
         window.removeEventListener("message", handleReply);
         resolve({ lastDate: event.data.lastDate, modes: event.data.modes });
       }
@@ -31,6 +34,13 @@ function askIsolatedWorld(conversationId) {
       { type: "JARVIS_ANCHOR_QUERY", id: id, conversationId: conversationId },
       "*",
     );
+
+    setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener("message", handleReply);
+      resolve({ lastDate: undefined, modes: [] });
+    }, 2000);
   });
 }
 
